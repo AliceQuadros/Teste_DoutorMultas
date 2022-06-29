@@ -5,14 +5,18 @@ import { DeleteClient } from "../useCases/deleteClientUseCase";
 import { ShowClients } from "../useCases/showClientUseCase";
 import { SubmitClientUseCase } from "../useCases/submitClientUseCase";
 import { UpdateClientUseCase } from "../useCases/updateClientUseCase";
+import { validationTest } from "../validationTest";
 
 const clientsRoutes = Router();
 
 const prismaClientsRepository = new PrismaClientsRepository();
 
-clientsRoutes.post('/clients', [
+clientsRoutes.post('/clients', 
+[
     body('name').notEmpty().withMessage("O campo nome é obrigatório"),
     body('phone').notEmpty().withMessage("O campo telefone é obrigatório"),
+    body('phone').isNumeric().withMessage("O campo telefone precisa ser um número"),
+    body('phone').isLength({min:11}).withMessage("O campo telefone precisa conter o formato: 53912345678"),
     body('address').notEmpty().withMessage("O campo endereço é obrigatório")
 ],
 async (req,res) => {
@@ -33,6 +37,7 @@ async (req,res) => {
         phone,
         address,
      });
+    
 
     return res.status(201).send();
 
@@ -47,7 +52,7 @@ clientsRoutes.get("/clients", async (req, res) => {
     const result = await showClients.execute()
 
     
-    return res.json(result);
+    return res.json(result).status(200);
 
 });
 
@@ -74,13 +79,14 @@ async (req, res) => {
 
 
 clientsRoutes.put("/clients",
-body('id').notEmpty().withMessage("O campo ID é obrigatório"),
+[   
+    body('id').notEmpty().withMessage("O campo ID é obrigatório"),
+    body('phone').isNumeric().withMessage("O campo telefone precisa ser um número"),
+    body('phone').isLength({min:11}).withMessage("O campo telefone precisa conter o formato: 53912345678"),
+],
 async (req, res) => {
-
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-    }
+    
+    validationTest(req, res);
 
     const{ id, name, phone, address} = req.body;
 
@@ -92,6 +98,7 @@ async (req, res) => {
 
 
 });
+
 
 
 
